@@ -87,12 +87,12 @@
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
         // YAPILANDIRMA
-        const API_KEY = "AIzaSyAk9ckJzNrqQoQZ9L7auQRLaQQRlXiJM2c";
+        const API_KEY = "AIzaSyCW8E6cjf53-Na9lGcGIDfZN5xExDHJ654";
         const genAI = new GoogleGenerativeAI(API_KEY);
 
         // Model Ayarları (System Instruction dahil)
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash", // Web SDK'da stabil sürüm
+            model: "gemini-2.0-flash-lite-preview-02-05", // Web SDK'da stabil sürüm
             systemInstruction: "Senin adın Konuk AI. Seni Göktan Konuk yaptı. Kişiliğin: Esprili, neşeli, yardımsever ve biraz da zekice şakalar yapan birisin. Uzmanlık Alanların: Kod yazma (yazılım) ve genel sohbet konularında tam bir profesyonelsin. Cevaplarında Göktan Konuk'un imzası olduğunu hissettir ama kullanıcıya odaklan."
         });
 
@@ -142,4 +142,5 @@
         }
     </script>
 </body>
+
 </html>
