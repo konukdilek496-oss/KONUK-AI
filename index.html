@@ -1,146 +1,73 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Konuk AI</title>
-    <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f4f4f9; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px; 
-        }
-        #chat-box { 
-            width: 100%; 
-            max-width: 600px; 
-            height: 400px; 
-            border: 1px solid #ccc; 
-            background: white; 
-            overflow-y: auto; 
-            padding: 15px; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-            display: flex;
-            flex-direction: column;
-        }
-        .user-msg { 
-            color: #2c3e50; 
-            font-weight: bold; 
-            margin-bottom: 10px; 
-            align-self: flex-end;
-            background: #e1f5fe;
-            padding: 8px 12px;
-            border-radius: 10px;
-        }
-        .ai-msg { 
-            color: #27ae60; 
-            margin-bottom: 20px; 
-            border-bottom: 1px solid #eee; 
-            padding-bottom: 10px; 
-            align-self: flex-start;
-            background: #f1f8e9;
-            padding: 8px 12px;
-            border-radius: 10px;
-            max-width: 90%;
-        }
-        #input-area { 
-            margin-top: 20px; 
-            width: 100%; 
-            max-width: 600px; 
-            display: flex; 
-        }
-        input { 
-            flex-grow: 1; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 5px 0 0 5px; 
-            outline: none; 
-        }
-        button { 
-            padding: 10px 20px; 
-            border: none; 
-            background: #27ae60; 
-            color: white; 
-            border-radius: 0 5px 5px 0; 
-            cursor: pointer; 
-        }
-        button:hover { background: #219150; }
-        .loading { font-style: italic; color: #888; }
-    </style>
-</head>
-<body>
+<script type="module">
+    import { GoogleGenerativeAI } from "[https://esm.run/@google/generative-ai](https://esm.run/@google/generative-ai)";
 
-    <h1>🤖 Konuk AI</h1>
-    <p><i>Göktan Konuk imzasıyla...</i></p>
+    // API ANAHTARI - (İnternete yüklerken burayı gizli tutmalısın!)
+    const API_KEY = "BURAYA_KENDI_ANAHTARINI_YAZ"; 
+    const genAI = new GoogleGenerativeAI(API_KEY);
 
-    <div id="chat-box"></div>
+    // Stabil model sürümü: 1.5-flash
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash", 
+        systemInstruction: "Senin adın Konuk AI. Seni Göktan Konuk yaptı. Kişiliğin: Esprili, neşeli, yardımsever ve zekice şakalar yapan birisin. Yazılım (coding) konusunda tam bir profesyonelsin. Cevaplarında Göktan Konuk imzası olduğunu hissettir."
+    });
 
-    <div id="input-area">
-        <input type="text" id="user-input" placeholder="Konuk AI'ya bir şeyler sor..." onkeypress="handleKeyPress(event)">
-        <button onclick="sendMessage()">Gönder</button>
-    </div>
+    const chat = model.startChat({
+        history: [],
+        generationConfig: {
+            maxOutputTokens: 2048,
+            temperature: 0.8,
+        },
+    });
 
-    <script type="module">
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+    window.sendMessage = async function() {
+        const input = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const message = input.value.trim();
 
-        // YAPILANDIRMA
-        const API_KEY = "AIzaSyCW8E6cjf53-Na9lGcGIDfZN5xExDHJ654";
-        const genAI = new GoogleGenerativeAI(API_KEY);
+        if (!message) return;
 
-        // Model Ayarları (System Instruction dahil)
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.0-flash-lite-preview-02-05", // Web SDK'da stabil sürüm
-            systemInstruction: "Senin adın Konuk AI. Seni Göktan Konuk yaptı. Kişiliğin: Esprili, neşeli, yardımsever ve biraz da zekice şakalar yapan birisin. Uzmanlık Alanların: Kod yazma (yazılım) ve genel sohbet konularında tam bir profesyonelsin. Cevaplarında Göktan Konuk'un imzası olduğunu hissettir ama kullanıcıya odaklan."
-        });
+        // Kullanıcı Mesajını Ekle
+        const userDiv = document.createElement("div");
+        userDiv.className = "user-msg";
+        userDiv.textContent = `Siz: ${message}`;
+        chatBox.appendChild(userDiv);
+        
+        input.value = '';
+        
+        // Yükleniyor Göstergesi
+        const loadingId = "loading-" + Date.now();
+        const loadingDiv = document.createElement("div");
+        loadingDiv.className = "ai-msg loading";
+        loadingDiv.id = loadingId;
+        loadingDiv.textContent = "Konuk AI düşünüyor...";
+        chatBox.appendChild(loadingDiv);
+        
+        // Yumuşak kaydırma
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
 
-        const chat = model.startChat({
-            history: [],
-            generationConfig: {
-                maxOutputTokens: 8192,
-                temperature: 0.7,
-            },
-        });
+        try {
+            const result = await chat.sendMessage(message);
+            const response = await result.response;
+            const text = response.text();
 
-        window.sendMessage = async function() {
-            const input = document.getElementById('user-input');
-            const chatBox = document.getElementById('chat-box');
-            const message = input.value.trim();
+            document.getElementById(loadingId).remove();
 
-            if (!message) return;
+            // AI Mesajını Ekle
+            const aiDiv = document.createElement("div");
+            aiDiv.className = "ai-msg";
+            // Not: Kod bloklarını renklendirmek istersen buraya Marked.js ekleyebiliriz.
+            aiDiv.innerHTML = `<b>Konuk AI:</b> <br>${text.replace(/\n/g, '<br>')}`; 
+            chatBox.appendChild(aiDiv);
 
-            // Kullanıcı mesajını ekrana bas
-            chatBox.innerHTML += `<div class="user-msg">Siz: ${message}</div>`;
-            input.value = '';
-            
-            // Yükleniyor mesajı
-            const loadingId = "loading-" + Date.now();
-            chatBox.innerHTML += `<div class="ai-msg loading" id="${loadingId}">Konuk AI düşünüyor...</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            try {
-                const result = await chat.sendMessage(message);
-                const response = await result.response;
-                const text = response.text();
-
-                // Yükleniyor yazısını kaldır ve cevabı yaz
-                document.getElementById(loadingId).remove();
-                chatBox.innerHTML += `<div class="ai-msg"><b>Konuk AI:</b> ${text}</div>`;
-            } catch (error) {
-                document.getElementById(loadingId).innerText = "Hay aksi, devrelerimde bir kısa devre oldu: " + error.message;
-            }
-
-            chatBox.scrollTop = chatBox.scrollHeight;
+        } catch (error) {
+            const errEl = document.getElementById(loadingId);
+            if(errEl) errEl.textContent = "Hata oluştu: " + error.message;
         }
 
-        window.handleKeyPress = function(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
-    </script>
-</body>
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    }
 
-</html>
+    window.handleKeyPress = function(event) {
+        if (event.key === 'Enter') sendMessage();
+    }
+</script>
